@@ -273,5 +273,9 @@ A web application was built using **Streamlit**.
   - Source chunk content  
 
 ---
+### App Interface
+<p align="center"> <img src="app.png"> </p>
 
+### Demo Link
+[Click here to watch the video](https://github.com/aKayy369/A6/issues/1)
 
