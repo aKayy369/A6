@@ -1,161 +1,220 @@
-# 📘 A6: Naive RAG vs Contextual Retrieval
+# A6: Naive RAG vs Contextual Retrieval
 
-## 👤 Student Information
+## Submitted BY - 
 - **Student ID:** st125999  
-- **Chapter Assigned:** Chapter 9  
+- **Assigned Chapter:** Chapter 9  
 
 ---
 
-# Overview
+# Objective
 
-This assignment implements a **Retrieval-Augmented Generation (RAG)** system for answering questions based on a specific textbook chapter.
+The goal of this assignment is to build a **domain-specific Question Answering (QA) system** using Retrieval-Augmented Generation (RAG) techniques.
 
-Two approaches are compared:
+Two retrieval approaches are implemented and compared:
 
 - **Naive RAG**
 - **Contextual Retrieval**
 
-The goal is to evaluate how adding contextual information to chunks improves retrieval and answer generation.
+Their performance is evaluated using **ROUGE metrics**.
+
+---
+
 
 ---
 
 # Task 1: Source Discovery & Data Preparation
 
 ## Chapter Selection
-Based on the last digit of the student ID (**9**), **Chapter 9** was selected from the textbook.
+The assigned chapter is determined by the last digit of the student ID.
+
+- Student ID: **st125999**
+- Last digit: **9**
+- Assigned chapter: **Chapter 9**
 
 ---
 
 ## Document Processing
 
-The chapter PDF was processed using **PyMuPDF (`fitz`)**:
+The chapter PDF was processed using **PyMuPDF (`fitz`)**.
 
-- Extracted raw text from PDF  
-- Cleaned text by:
-  - Removing special characters  
-  - Fixing broken lines  
-  - Removing page numbers  
-  - Normalizing whitespace  
+### Steps:
+- Extract raw text from PDF
+- Remove unwanted characters
+- Fix broken words and lines
+- Remove page numbers
+- Normalize whitespace
 
 ---
 
 ## Chunking Strategy
 
-- Chunk size: **500 characters**
-- Overlap: **100 characters**
+The cleaned text was split into overlapping chunks:
 
-This ensures:
-- Better context continuity  
-- Improved retrieval performance  
+- **Chunk size:** 500 characters  
+- **Overlap:** 100 characters  
+
+### Why overlap?
+- Preserves context between chunks  
+- Improves retrieval quality  
 
 ---
 
 ## QA Pair Generation
 
-- Created **20 Question-Answer pairs**
-- Based strictly on Chapter 9 content  
+- Created **20 question-answer pairs**
+- Based strictly on Chapter 9 content
+- Covers key topics:
+  - Instruction tuning
+  - RLHF
+  - Reward models
+  - DPO
+  - Chain-of-thought prompting
 
-Saved in:
-```
-outputs/task1/qa_pairs.json
+Saved in: 
+---
+
+# Task 1: Source Discovery & Data Preparation
+
+## Chapter Selection
+The assigned chapter is determined by the last digit of the student ID.
+
+- Student ID: **st125999**
+- Last digit: **9**
+- Assigned chapter: **Chapter 9**
+
+---
+
+## Document Processing
+
+The chapter PDF was processed using **PyMuPDF (`fitz`)**.
+
+### Steps:
+- Extract raw text from PDF
+- Remove unwanted characters
+- Fix broken words and lines
+- Remove page numbers
+- Normalize whitespace
+
+---
+
+## Chunking Strategy
+
+The cleaned text was split into overlapping chunks:
+
+- **Chunk size:** 500 characters  
+- **Overlap:** 100 characters  
+
+### Why overlap?
+- Preserves context between chunks  
+- Improves retrieval quality  
+
+---
+
+## QA Pair Generation
+
+- Created **20 question-answer pairs**
+- Based strictly on Chapter 9 content
+- Covers key topics:
+  - Instruction tuning
+  - RLHF
+  - Reward models
+  - DPO
+  - Chain-of-thought prompting
+
+Saved in: outputs/task1/qa_pairs.json
 outputs/task1/ground_truth.json
-```
+
 
 ---
 
 # Task 2: Naive RAG vs Contextual Retrieval
 
-## 🔍 Models Used
+## Models Used
 
 ### Retriever Model
-- **SentenceTransformer**
-- Model: `all-MiniLM-L6-v2`
+- **Model:** `sentence-transformers/all-MiniLM-L6-v2`  
+- Used for embedding chunks and queries  
 
-### Generator Model (Evaluation)
-- **Qwen 2.5 3B Instruct**
-- Model: `Qwen/Qwen2.5-3B-Instruct`
+### Generator Model
+- **Model:** `Qwen/Qwen2.5-3B-Instruct`  
+- Used for answer generation  
 
 ---
 
-## Naive RAG
+# 2.1 Naive RAG
 
-Pipeline:
+## Pipeline:
+
 1. Split text into chunks  
 2. Convert chunks into embeddings  
-3. Retrieve top-k chunks using FAISS  
-4. Generate answer from retrieved context  
+3. Store embeddings in FAISS index  
+4. Retrieve top-k relevant chunks  
+5. Generate answer using retrieved context  
+
+### Key Characteristics:
+- Uses **raw chunk text only**
+- No additional context provided
 
 ---
 
-## Contextual Retrieval
+# 2.2 Contextual Retrieval
 
-To improve retrieval quality, Contextual Retrieval was implemented by enriching each chunk with additional context generated using an LLM.
-
-### Contextual Enrichment
-
-For each chunk, a short 1–2 sentence explanation was generated describing how the chunk relates to the full document (Chapter 9).
-
-### Prompt Strategy
-
-The model was provided with:
-- The document title (Chapter 9)
-- A truncated portion of the full document
-- The target chunk
-
-It then generated a contextual prefix in the format:
-
-```
-This chunk from Chapter 9 discusses ...
-```
-
-### Example
-
-**Before:**
-```
-Revenue grew 40% to $314M with improved margins.
-```
-
-**After:**
-```
-This chunk from Chapter 9 discusses financial performance and growth trends discussed in the text.
-
-Revenue grew 40% to $314M with improved margins.
-```
-
-### Chunk Transformation
-
-Each chunk was transformed into:
-
-- Contextual prefix  
-- Original chunk text  
-
-### Re-Embedding and Indexing
-
-The enriched chunks were:
-- Re-embedded using the same embedding model  
-- Stored in a FAISS index  
-
-### Retrieval and Generation
-
-The same retrieval and generation pipeline as Naive RAG was used, but applied on contextualized chunks instead.
-
-This improves:
-- Semantic understanding  
-- Retrieval relevance  
-- Answer quality  
-
-## Evaluation Method
-
-- Used **ROUGE metrics**:
-  - ROUGE-1  
-  - ROUGE-2  
-  - ROUGE-L  
-
-- Compared generated answers with ground truth  
+## Idea:
+Improve retrieval by **adding semantic context to each chunk**.
 
 ---
 
-## Evaluation Results
+## Contextual Enrichment
+
+Each chunk is enriched using an LLM to generate a short explanation.
+
+### Input to LLM:
+- Chapter title  
+- Partial full document  
+- Target chunk  
+
+### Output:
+A contextual prefix:
+
+
+---
+
+## Re-Embedding
+
+- Enriched chunks are embedded again  
+- Stored in a new FAISS index  
+
+---
+
+## Retrieval & Generation
+
+- Same pipeline as Naive RAG  
+- But uses **contextualized chunks**
+
+---
+
+## Why Contextual Retrieval Works Better
+
+- Adds semantic meaning to chunks  
+- Improves retrieval accuracy  
+- Provides better input to generator  
+
+---
+
+# 2.3 Evaluation
+
+## Metric Used:
+- **ROUGE-1**
+- **ROUGE-2**
+- **ROUGE-L**
+
+These measure overlap between:
+- Generated answer  
+- Ground truth answer  
+
+---
+
+# 2.4 Results
 
 | Method | ROUGE-1 | ROUGE-2 | ROUGE-L |
 |--------|--------|--------|--------|
@@ -164,15 +223,35 @@ This improves:
 
 ---
 
-## Analysis
+# Analysis
 
-The results show that **Contextual Retrieval significantly outperforms Naive RAG** across all metrics.
+The results show that **Contextual Retrieval significantly outperforms Naive RAG**.
 
-- ROUGE-1 improved, indicating better word-level relevance  
-- ROUGE-2 improved, showing stronger phrase-level coherence  
-- ROUGE-L improved, indicating better sentence structure  
+### Improvements:
+- **ROUGE-1 ↑** → better word-level relevance  
+- **ROUGE-2 ↑** → better phrase-level matching  
+- **ROUGE-L ↑** → better sentence structure  
 
-This demonstrates that contextual enrichment helps retrieve more relevant chunks and improves answer generation quality.
+---
+
+## Reason for Improvement
+
+Naive RAG relies only on raw chunk text, which may lack sufficient context.
+
+Contextual Retrieval improves performance because:
+
+- Each chunk includes **additional semantic explanation**
+- Retriever selects **more relevant chunks**
+- Generator receives **clearer and richer context**
+
+---
+
+## Conclusion
+
+Contextual Retrieval leads to:
+- Better retrieval quality  
+- More accurate answers  
+- Higher evaluation scores  
 
 ---
 
@@ -180,59 +259,19 @@ This demonstrates that contextual enrichment helps retrieve more relevant chunks
 
 ## Implementation
 
-A web application was developed using **Streamlit**.
+A web application was built using **Streamlit**.
 
-### Features:
+---
+
+## Features
+
 - Ask questions about Chapter 9  
-- Uses Contextual Retrieval backend  
+- Uses **Contextual Retrieval backend**  
 - Displays:
   - Generated answer  
-  - Retrieved source chunks  
+  - Top retrieved chunks  
+  - Source chunk content  
 
 ---
 
 
-## Project Structure
-
-```
-.
-├── app/
-│   └── app.py
-├── outputs/
-│   ├── task1/
-│   └── task2/
-├── answer/
-│   └── response-st125999-chapter-9.json
-├── README.md
-├── requirements.txt
-```
-
----
-
-
-
-## JSON Format
-
-```json
-[
-  {
-    "question": "...",
-    "ground_truth_answer": "...",
-    "naive_rag_answer": "...",
-    "contextual_retrieval_answer": "..."
-  }
-]
-```
-
----
-
-# Conclusion
-
-This project demonstrates that **Contextual Retrieval improves RAG performance** by enhancing retrieval quality through contextual enrichment.
-
-It leads to:
-- Better chunk relevance  
-- More accurate answers  
-- Higher ROUGE scores  
-
----
